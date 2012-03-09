@@ -4,6 +4,7 @@ import org.spockframework.runtime.extension.IGlobalExtension
 import org.spockframework.runtime.model.SpecInfo
 
 import org.spockframework.runtime.AbstractRunListener
+import org.spockframework.runtime.model.BlockKind;
 import org.spockframework.runtime.model.ErrorInfo
 import org.spockframework.runtime.model.IterationInfo
 import org.spockframework.runtime.model.SpecInfo
@@ -15,7 +16,8 @@ class ReportExtension implements IGlobalExtension {
     void visitSpec(SpecInfo spec) {
         spec.addListener(new AbstractRunListener() {
 
-            StringBuilder buffer = new StringBuilder()
+            def buffer = new StringBuilder()
+            def iterBody
             def dataVars
 
             @Override
@@ -30,33 +32,44 @@ class ReportExtension implements IGlobalExtension {
 
 """
                 buffer << "<body>\n"
+                buffer << "<h1>${specInfo.name-'Spec'} Specification</h1>\n"
             }
 
             @Override
             void beforeFeature(FeatureInfo feature) {
-                buffer << "<h2>Feature ${feature.name}</h2>"
+                buffer << "<h2>Feature: ${feature.name}</h2>"
+                iterBody = new StringBuilder()
                 dataVars = feature.dataVariables
+                iterBody << "<div>${dataVars}</div>"
             }
 
             @Override
             void beforeIteration(IterationInfo iteration) {
-                buffer << "<div>${iteration.dataValues}</div>"
+                iterBody << "<div>${iteration.dataValues}</div>"
             }
 
             @Override
             void afterFeature(FeatureInfo feature) {
                 for (block in feature.blocks) {
-                    buffer <<  "<div class=\"block-${block.kind}\">${block.kind}"
+                    def kindText = ""
+                    switch(block.kind) {
+                        case BlockKind.SETUP:  kindText = "Given "  ; break
+                        case BlockKind.WHEN:   kindText = "When "   ; break
+                        case BlockKind.THEN:   kindText = "Then "   ; break
+                        case BlockKind.EXPECT: kindText = "Expect " ; break
+                        case BlockKind.WHERE:  kindText = "Where "  ; break
+                    }
+                    buffer <<  "<div class=\"block-${block.kind}\">${kindText}"
                     for (text in block.texts) {
                         buffer << "<span>${text}</span>"
                     }
                     buffer << "</div>"
                 }
+                buffer << iterBody.toString()
             }
 
             @Override
             void afterSpec(SpecInfo specInfo) {
-
                 buffer << "</body>\n"
                 buffer << "</html>"
 
@@ -68,7 +81,7 @@ class ReportExtension implements IGlobalExtension {
 
             @Override
             void error(ErrorInfo error) {
-                buffer << "<div><pre>${error.error.message}</pre></div>"
+                iterBody << "<div><pre>${error.error.message}</pre></div>"
             }
 
         })
