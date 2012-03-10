@@ -3,13 +3,17 @@ package org.spockframework.extension
 import org.spockframework.runtime.extension.IGlobalExtension
 import org.spockframework.runtime.model.SpecInfo
 
+import java.text.MessageFormat;
+
 import org.spockframework.runtime.AbstractRunListener
-import org.spockframework.runtime.model.BlockKind;
+import org.spockframework.runtime.model.BlockKind
 import org.spockframework.runtime.model.ErrorInfo
 import org.spockframework.runtime.model.IterationInfo
 import org.spockframework.runtime.model.SpecInfo
 import org.spockframework.runtime.model.FeatureInfo
 import org.spockframework.runtime.extension.IGlobalExtension
+
+import spock.i18n.util.UnicodeUtils;
 
 class ReportExtension implements IGlobalExtension {
 
@@ -20,11 +24,17 @@ class ReportExtension implements IGlobalExtension {
             def buffer = new StringBuilder()
             def iterBody
             def dataVars
-            def prop = new Properties()
+            def enProp = new Properties()
+            def prop   = new Properties()
+
+            String fmt(String key, Object... args) {
+                def val = prop.getProperty(key, enProp.getProperty(key))
+                return MessageFormat.format(val, args)
+            }
 
             @Override
             void beforeSpec(SpecInfo specInfo) {
-
+                enProp.load(ReportExtension.class.getClassLoader().getResourceAsStream("org/spockframework/extension/messages.properties"))
                 if(specInfo.metadata) {
                     def name = specInfo.metadata.toString()
                     if(name == "@spock.i18n.Thai()") {
@@ -37,7 +47,7 @@ class ReportExtension implements IGlobalExtension {
 <head>
   <meta charset="utf-8" />
   <title>
-    ${prop.getProperty('Specification', 'Specification')} ${specInfo.description}
+    ${fmt('spock.specification', specInfo.description)}
   </title>
   <style>
     table.whereBlock {
@@ -64,12 +74,12 @@ class ReportExtension implements IGlobalExtension {
 
 """
                 buffer << "<body>\n"
-                buffer << "<h1>${specInfo.name-'Spec'} Specification</h1>\n"
+                buffer << "<h1>${fmt('spock.specification', specInfo.name-'Spec')}</h1>\n"
             }
 
             @Override
             void beforeFeature(FeatureInfo feature) {
-                buffer << "<h2>Feature: ${feature.name}</h2>\n"
+                buffer << "<h2>${fmt('spock.feature', feature.name)}</h2>\n"
                 iterBody = new StringBuilder()
                 dataVars = feature.dataVariables
                 iterBody << "<table class=\"whereBlock\">\n"
@@ -99,13 +109,13 @@ class ReportExtension implements IGlobalExtension {
                 for (block in feature.blocks) {
                     def kindText = ""
                     switch(block.kind) {
-                        case BlockKind.SETUP:  kindText = "Given " ; break
-                        case BlockKind.WHEN:   kindText = "When "  ; break
-                        case BlockKind.THEN:   kindText = "Then "  ; break
-                        case BlockKind.EXPECT: kindText = "Expect "; break
-                        case BlockKind.WHERE:  kindText = "Where " ; break
+                        case BlockKind.SETUP:  kindText = "spock.given" ; break
+                        case BlockKind.WHEN:   kindText = "spock.when"  ; break
+                        case BlockKind.THEN:   kindText = "spock.then"  ; break
+                        case BlockKind.EXPECT: kindText = "spock.expect"; break
+                        case BlockKind.WHERE:  kindText = "spock.where" ; break
                     }
-                    buffer <<  "<div class=\"block-${block.kind}\">${kindText}"
+                    buffer <<  "<div class=\"block-${block.kind}\">${fmt(kindText)} "
                     for (text in block.texts) {
                         buffer << "<span>${text}</span>\n"
                     }
@@ -122,7 +132,7 @@ class ReportExtension implements IGlobalExtension {
                 buffer << "</html>"
 
                 def out = new File("./target/SPEC-"+specInfo.description+".html")
-                out.withWriter { w ->
+                out.withWriter("UTF-8"){ w ->
                     w.write(buffer.toString())
                 }
             }
