@@ -1,4 +1,4 @@
-package extension.custom
+package org.spockframework.extension
 
 import org.spockframework.runtime.extension.IGlobalExtension
 import org.spockframework.runtime.model.SpecInfo
@@ -14,20 +14,30 @@ import org.spockframework.runtime.extension.IGlobalExtension
 class ReportExtension implements IGlobalExtension {
 
     void visitSpec(SpecInfo spec) {
+
         spec.addListener(new AbstractRunListener() {
 
             def buffer = new StringBuilder()
             def iterBody
             def dataVars
+            def prop = new Properties()
 
             @Override
             void beforeSpec(SpecInfo specInfo) {
+
+                if(specInfo.metadata) {
+                    def name = specInfo.metadata.toString()
+                    if(name == "@spock.i18n.Thai()") {
+                        prop.load(ReportExtension.class.getClassLoader().getResourceAsStream("org/spockframework/extension/messages_th.properties"))
+                    }
+                }
+
                 buffer << "<html>\n"
                 buffer << """\
 <head>
   <meta charset="utf-8" />
   <title>
-    Specification ${specInfo.description}
+    ${prop.getProperty('Specification', 'Specification')} ${specInfo.description}
   </title>
   <style>
     table.whereBlock {
