@@ -21,6 +21,9 @@ class ReportExtension implements IGlobalExtension {
 
         spec.addListener(new AbstractRunListener() {
 
+            static String REPORT_DIR = "./target/spock-reports"
+            static String MESSAGES_PATH = "org/spockframework/extension/messages"
+
             def buffer = new StringBuilder()
             def iterBody
             def errBody
@@ -36,21 +39,21 @@ class ReportExtension implements IGlobalExtension {
             @Override
             void beforeSpec(SpecInfo specInfo) {
                 def cl = ReportExtension.class.getClassLoader()
-                enProp.load(cl.getResourceAsStream("org/spockframework/extension/messages.properties"))
+                enProp.load(cl.getResourceAsStream("${MESSAGES_PATH}.properties"))
                 if(specInfo.metadata) {
                     def name = specInfo.metadata.toString()
                     if(name == "@spock.i18n.Thai()") {
-                        prop.load(cl.getResourceAsStream("org/spockframework/extension/messages_th.properties"))
+                        prop.load(cl.getResourceAsStream("${MESSAGES_PATH}_th.properties"))
                     }
                 }
 
                 def css = "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />"
                 def styleStream = cl.getResourceAsStream("spock-style.css")
                 if(styleStream != null) {
-                    if(new File("./target/spock-reports").exists()==false) {
-                        new File("./target/spock-reports").mkdirs()
+                    if(new File(REPORT_DIR).exists()==false) {
+                        new File(REPORT_DIR).mkdirs()
                     }
-                    def outStyle = new File("./target/spock-reports/style.css").newPrintWriter("UTF-8")
+                    def outStyle = new File("${REPORT_DIR}/style.css").newPrintWriter("UTF-8")
                     styleStream.withReader { r ->
                         def lines = r.readLines()
                         lines.each { l ->
@@ -87,6 +90,9 @@ class ReportExtension implements IGlobalExtension {
     tr.error td {
         background-color: #bb0000;
         color: white;
+    }
+    .errorMessage {
+        white-space: pre;
     }
   </style>
 '''
@@ -173,10 +179,10 @@ ${css}
             void afterSpec(SpecInfo specInfo) {
                 buffer << "</body>\n"
                 buffer << "</html>"
-                if(new File("./target/spock-reports").exists()==false) {
-                    new File("./target/spock-reports").mkdirs()
+                if(new File(REPORT_DIR).exists()==false) {
+                    new File(REPORT_DIR).mkdirs()
                 }
-                def out = new File("./target/spock-reports/SPOCK-"+specInfo.description+".html")
+                def out = new File("${REPORT_DIR}/SPOCK-${specInfo.description}.html")
                 out.withWriter("UTF-8"){ w ->
                     w.write(buffer.toString())
                 }
@@ -186,7 +192,7 @@ ${css}
             void error(ErrorInfo error) {
                 errBody = """\
             <tr>
-                <td colspan=\"${dataVars.size()}\"><pre>${error.error.message}</pre></td>
+                <td class=\"errorMessage\" colspan=\"${dataVars.size()}\"><pre>${error.error.message}</pre></td>
             </tr>
 """
             }
