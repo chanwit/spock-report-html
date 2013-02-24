@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.spockframework</groupId>
   <artifactId>spock-report-html</artifactId>
-  <version>0.1</version>
+  <version>0.2.1</version>
   <dependencies>
       <dependency>
           <groupId>org.spockframework</groupId>
           <artifactId>spock-core</artifactId>
-          <version>0.6-groovy-1.8</version>
+          <version>0.7-groovy-2.0</version>
       </dependency>
   </dependencies>
   <build>
@@ -17,7 +17,7 @@
                 <artifactId>gmaven-plugin</artifactId>
                 <version>1.4</version>
                 <configuration>
-                    <providerSelection>1.8</providerSelection>
+                    <providerSelection>2.0</providerSelection>
                 </configuration>
                 <executions>
                     <execution>
@@ -29,7 +29,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>org.codehaus.gmaven.runtime</groupId>
-                        <artifactId>gmaven-runtime-1.8</artifactId>
+                        <artifactId>gmaven-runtime-2.0</artifactId>
                         <version>1.4</version>
                         <exclusions>
                             <exclusion>
@@ -41,7 +41,7 @@
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-all</artifactId>
-                        <version>1.8.6</version>
+                        <version>2.0.5</version>
                     </dependency>
                 </dependencies>
             </plugin>
