@@ -1,19 +1,11 @@
 package org.spockframework.extension
 
-import org.spockframework.runtime.extension.IGlobalExtension
-import org.spockframework.runtime.model.SpecInfo
-
-import java.text.MessageFormat;
-
 import org.spockframework.runtime.AbstractRunListener
-import org.spockframework.runtime.model.BlockKind
-import org.spockframework.runtime.model.ErrorInfo
-import org.spockframework.runtime.model.IterationInfo
-import org.spockframework.runtime.model.SpecInfo
-import org.spockframework.runtime.model.FeatureInfo
 import org.spockframework.runtime.extension.IGlobalExtension
+import org.spockframework.runtime.model.*
+import spock.i18n.Report
 
-import spock.i18n.util.UnicodeUtils;
+import java.text.MessageFormat
 
 class ReportExtension implements IGlobalExtension {
 
@@ -42,8 +34,16 @@ class ReportExtension implements IGlobalExtension {
                 enProp.load(cl.getResourceAsStream("${MESSAGES_PATH}.properties"))
                 if(specInfo.metadata) {
                     def name = specInfo.metadata.toString()
+                    // Backward compatibility
                     if(name == "@spock.i18n.Thai()") {
                         prop.load(cl.getResourceAsStream("${MESSAGES_PATH}_th.properties"))
+                    } else {
+                        if (specInfo.metadata instanceof Report) {
+                            String lang = (specInfo.metadata as Report).language()?.toString().toLowerCase()
+                            if (lang != 'en') {
+                                prop.load(cl.getResourceAsStream("${MESSAGES_PATH}_${lang}.properties"))
+                            }
+                        }
                     }
                 }
 
